@@ -159,7 +159,8 @@ with st.sidebar:
 
     symbol = st.selectbox("Select Symbol", SYMBOLS)
 
-    model_path = f"saved_models/{symbol}_best_model.keras"
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(BASE_DIR, "saved_models", f"{symbol}_best_model.keras")
     model_exists = os.path.exists(model_path)
 
     if not model_exists:
