@@ -8,7 +8,8 @@ from config import MARKETAUX_API_KEY, WINDOW_SIZE, FEATURE_COLS, TARGET_COL
 
 def fetch_price_data(symbol, period="2y"):
     df = yf.download(symbol, period=period, interval="1d", auto_adjust=False, progress=False)
-    df.index = pd.to_datetime(df.index).normalize()
+    df.index = pd.to_datetime(df.index, utc=True).tz_localize(None).astype("datetime64[ns]")
+    df.index = df.index.normalize()
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = ["_".join([str(x) for x in col if str(x) != ""]).strip("_") for col in df.columns.to_flat_index()]
     df["Close"] = df[[c for c in df.columns if "Close" in c][0]]
@@ -43,7 +44,8 @@ def fetch_sentiment(symbol, start_date, end_date, limit=100):
         dt = pd.to_datetime(pub_date, utc=True, errors="coerce")
         if pd.isna(dt):
             continue
-        dt = dt.tz_localize(None).normalize()
+        dt = dt.tz_localize(None).astype("datetime64[ns]")
+        dt = dt.normalize()
         scores = [float(e["sentiment_score"]) for e in entities
                   if e.get("symbol") == symbol and e.get("sentiment_score") is not None]
         if scores:
@@ -68,6 +70,8 @@ def build_features(symbol, period="2y"):
         daily_news = (news_df.groupby("news_date")
                       .agg(sentiment_raw=("sentiment_raw", "mean"))
                       .reset_index().sort_values("news_date"))
+        trade_df["trade_date"] = pd.to_datetime(trade_df["trade_date"]).astype("datetime64[ns]")
+        daily_news["news_date"] = pd.to_datetime(daily_news["news_date"]).astype("datetime64[ns]"
         aligned = pd.merge_asof(trade_df.sort_values("trade_date"), daily_news,
                                 left_on="trade_date", right_on="news_date", direction="backward")
         trade_df["sentiment_raw"] = aligned["sentiment_raw"].fillna(0.0)
