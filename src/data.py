@@ -71,7 +71,7 @@ def build_features(symbol, period="2y"):
                       .agg(sentiment_raw=("sentiment_raw", "mean"))
                       .reset_index().sort_values("news_date"))
         trade_df["trade_date"] = pd.to_datetime(trade_df["trade_date"]).astype("datetime64[ns]")
-        daily_news["news_date"] = pd.to_datetime(daily_news["news_date"]).astype("datetime64[ns]"
+        daily_news["news_date"] = pd.to_datetime(daily_news["news_date"]).astype("datetime64[ns]")
         aligned = pd.merge_asof(trade_df.sort_values("trade_date"), daily_news,
                                 left_on="trade_date", right_on="news_date", direction="backward")
         trade_df["sentiment_raw"] = aligned["sentiment_raw"].fillna(0.0)
